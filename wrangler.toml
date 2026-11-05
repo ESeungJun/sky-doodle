@@ -1,0 +1,9 @@
+name = "sky-doodle"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-11-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sky-doodle"
+database_id = "d6813f9c-024c-4756-a41d-dd711ab1c1e5"
+migrations_dir = "migrations"

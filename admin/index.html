@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>하늘 스케치북 검수</title>
+  </head>
+  <body>
+    <header class="bar">
+      <h1>구름 검수</h1>
+      <dl class="stats" id="stats" aria-live="polite"></dl>
+    </header>
+    <nav class="tabs" role="tablist" aria-label="상태">
+      <button type="button" role="tab" data-status="pending" aria-selected="true">대기</button>
+      <button type="button" role="tab" data-status="approved" aria-selected="false">승인됨</button>
+      <button type="button" role="tab" data-status="rejected" aria-selected="false">거절됨</button>
+      <button type="button" role="tab" data-status="hidden" aria-selected="false">내림</button>
+    </nav>
+    <div class="bulk">
+      <label><input type="checkbox" id="all" /> 전체 선택</label>
+      <span id="picked">0개 선택</span>
+      <span class="grow"></span>
+      <span id="bulk-actions"></span>
+    </div>
+    <main id="grid" class="grid"></main>
+    <p id="empty" class="empty" hidden>여기는 비어 있어요.</p>
+    <button type="button" id="more" class="more" hidden>더 보기</button>
+    <script type="module" src="/src/admin.ts"></script>
+  </body>
+</html>

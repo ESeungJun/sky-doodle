@@ -1,0 +1,22 @@
+{
+  "name": "sky-doodle",
+  "private": true,
+  "version": "1.1.0",
+  "type": "module",
+  "homepage": "https://sky-doodle.pages.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ESeungJun/sky-doodle.git"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "deploy": "npm run build && npx --yes wrangler pages deploy dist"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261104.1",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.5"
+  }
+}
