@@ -3,6 +3,7 @@
 스케치북에 아무거나 그리고 '하늘로 보내기'를 누르면, 그 선 모양 그대로 몽글몽글한 뭉게구름이 되어 파란 하늘로 떠올라요. 원하면 다른 사람 하늘에도 띄울 수 있고, 운영자가 검수한 구름만 닉네임과 함께 두둥실 떠올라요.
 
 - 사이트: https://sky-doodle.pages.dev
+- 만든 이야기: [velog](https://velog.io/@haul/sky-doodle-drawing-becomes-cloud)
 
 <p align="center"><a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="100%" alt="스케치북에 하트를 그려 보내면 하트 모양 뭉게구름이 되어 하늘로 떠오르고, 다른 사람의 구름이 닉네임을 달고 아래에서 떠오르는 모습"></a><br>
 <sub>▶ <a href="docs/media/demo.mp4">고화질 영상 (MP4)</a></sub></p>
