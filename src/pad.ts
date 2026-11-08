@@ -74,6 +74,21 @@ export class Pad {
     return this.strokes.map((s) => s.slice())
   }
 
+  /** 마지막 한 획을 지운다 */
+  undo() {
+    if (this.pressing) return
+    this.strokes.pop()
+    this.redraw()
+    this.onChange(this.strokes.length > 0)
+  }
+
+  /** clear() 직전 선들로 되돌린다(지우기 되돌리기) */
+  restore(strokes: Stroke[]) {
+    this.strokes = strokes.map((s) => s.slice())
+    this.redraw()
+    this.onChange(this.strokes.length > 0)
+  }
+
   clear() {
     this.strokes = []
     this.current = null
