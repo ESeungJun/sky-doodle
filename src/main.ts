@@ -142,6 +142,9 @@ function strokesBox(strokes: Stroke[]) {
   return { cx: (minX + maxX) / 2, cy: (minY + maxY) / 2 }
 }
 
+// style.css 의 가로 폰 규칙과 같은 조건: 스케치북이 오른쪽에 서 있는 배치
+const SIDE_BOOK = matchMedia('(max-height: 500px) and (orientation: landscape)')
+
 function sendDrawing() {
   const strokes = pad.getStrokes()
   if (strokes.length === 0) return
@@ -154,11 +157,14 @@ function sendDrawing() {
   const depth = 0.6 + r() * 0.4
   // 도착 높이: 구름 윗면이 화면 안, 아랫면이 스케치북 위에 오게
   const bb = bounds(puffs)
-  const bookTop = book.getBoundingClientRect().top
+  const br = book.getBoundingClientRect()
+  // 가로 폰에서는 스케치북이 오른쪽에 서 있다: 높이 제한 대신 스케치북 왼쪽 하늘로 보낸다
+  const side = SIDE_BOOK.matches
   const minY = -bb.minY * depth + 14
-  const maxY = Math.max(minY, bookTop - bb.maxY * depth - 12)
+  const maxY = Math.max(minY, (side ? H * 0.8 : br.top) - bb.maxY * depth - 12)
   const ty = Math.min(maxY, Math.max(minY, H * (0.1 + r() * 0.34)))
   const halfW = ((bb.maxX - bb.minX) / 2) * depth
+  const rightX = side ? Math.max(halfW + 10, br.left - 10) : W
   const sx = rect.left + cx
   const sy = rect.top + cy
   const saved: SavedCloud = {
@@ -170,7 +176,7 @@ function sendDrawing() {
   clouds.push({
     puffs, sprite: null, seed, user: true, phase: reduceMotion ? 'rise' : 'morph', t: 0,
     x: sx, y: sy, sx, sy,
-    tx: Math.min(W - halfW - 10, Math.max(halfW + 10, sx + (r() - 0.5) * W * 0.4)), ty,
+    tx: Math.min(rightX - halfW - 10, Math.max(halfW + 10, side ? rightX * (0.25 + r() * 0.5) : sx + (r() - 0.5) * W * 0.4)), ty,
     depth, alpha: 1, bob: r() * 10, saved,
   })
   if (reduceMotion) clouds[clouds.length - 1].sprite = bake(puffs, dpr)
@@ -178,6 +184,7 @@ function sendDrawing() {
   if (shareBox.checked) void share(seed, strokes)
 
   pad.clear()
+  navigator.vibrate?.(12)
   book.classList.add('lift')
   setTimeout(() => book.classList.remove('lift'), 600)
 
@@ -491,6 +498,18 @@ window.addEventListener('resize', () => {
     }
   }, 120)
 })
+
+// 화면 키보드가 올라오면(닉네임 입력) 그만큼 스케치북을 올린다. 브라우저 화면은 줄지 않고 보이는 영역만 줄어드는 경우가 많다
+const vv = window.visualViewport
+if (vv) {
+  const onViewport = () => {
+    if (vv.scale > 1.01) return // 손가락으로 확대한 동안은 키보드가 아니라 확대 때문에 줄어든 것
+    const kb = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop))
+    document.documentElement.style.setProperty('--kb', `${kb < 60 ? 0 : kb}px`)
+  }
+  vv.addEventListener('resize', onViewport)
+  vv.addEventListener('scroll', onViewport)
+}
 
 resize()
 for (let i = 0; i < 6; i++) addAmbient(i)
