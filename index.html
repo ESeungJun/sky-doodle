@@ -22,17 +22,27 @@
         <p class="hint" id="hint">여기에 그려 보세요</p>
       </div>
       <div class="tools">
+        <button type="button" id="undo" class="ghost icon" aria-label="한 획 되돌리기" disabled>
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <button type="button" id="clear" class="ghost">지우기</button>
-        <div class="share">
-          <label class="check"><input type="checkbox" id="share" checked /> 다른 사람 하늘에도 띄우기</label>
-          <input type="text" id="nick" maxlength="10" placeholder="닉네임(선택)" autocomplete="nickname" aria-label="구름 아래에 보일 닉네임, 10자 이내" />
+        <div class="share" id="sharebox" hidden>
+          <label class="check"><input type="checkbox" id="share" /> 다른 사람 하늘에도 띄우기 <span class="sub">(검수 후)</span></label>
+          <input type="text" id="nick" maxlength="10" placeholder="닉네임(공개돼요)" autocomplete="nickname" aria-label="구름 아래에 공개로 보일 닉네임, 10자 이내, 선택" />
         </div>
         <button type="button" id="send" class="primary" disabled>하늘로 보내기</button>
+      </div>
+      <div class="ask" id="ask" role="dialog" aria-labelledby="ask-q" hidden>
+        <p id="ask-q">이 구름, 다른 사람 하늘에도 띄울까요?</p>
+        <p class="sub">검수를 거친 뒤 다른 방문자 하늘에 떠요. 닉네임을 쓰면 구름 아래 보여요.</p>
+        <input type="text" id="ask-nick" maxlength="10" placeholder="닉네임(선택)" autocomplete="nickname" aria-label="구름 아래에 공개로 보일 닉네임, 10자 이내, 선택" />
+        <div class="row"><button type="button" id="ask-no" class="ghost">괜찮아요</button><button type="button" id="ask-yes" class="primary">띄우기</button></div>
       </div>
     </section>
 
     <canvas id="fx" aria-hidden="true"></canvas>
     <p id="toast" class="toast" role="status" aria-live="polite"></p>
+    <p id="sr" class="sr-only" aria-live="polite"></p>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

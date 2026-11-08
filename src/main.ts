@@ -28,7 +28,7 @@ type Cloud = {
   nick?: string
 }
 
-type SavedCloud = { seed: number; depth: number; yf: number; pts: number[][] }
+type SavedCloud = { seed: number; depth: number; yf: number; pts: number[][]; w?: number } // w: 그린 종이 폭(px)
 
 const STORE_KEY = 'sky-doodle:v1'
 const MAX_USER = 18
@@ -40,6 +40,7 @@ const ARRIVE = 7 // 공유 구름이 아래에서 떠오르는 시간(초)
 const POLL_MS = 30_000
 const NICK_KEY = 'sky-doodle:nick'
 const SHARE_KEY = 'sky-doodle:share'
+const ASKED_KEY = 'sky-doodle:asked' // 첫 전송 뒤 공유를 물어봤는지
 
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -52,6 +53,12 @@ const hint = document.querySelector<HTMLElement>('#hint')!
 const sendBtn = document.querySelector<HTMLButtonElement>('#send')!
 const clearBtn = document.querySelector<HTMLButtonElement>('#clear')!
 const shareBox = document.querySelector<HTMLInputElement>('#share')!
+const shareRow = document.querySelector<HTMLElement>('#sharebox')!
+const undoBtn = document.querySelector<HTMLButtonElement>('#undo')!
+const askBox = document.querySelector<HTMLElement>('#ask')!
+const askNick = document.querySelector<HTMLInputElement>('#ask-nick')!
+const sr = document.querySelector<HTMLElement>('#sr')!
+const paper = document.querySelector<HTMLElement>('.paper')!
 const nickInput = document.querySelector<HTMLInputElement>('#nick')!
 const toast = document.querySelector<HTMLElement>('#toast')!
 const pad = new Pad(document.querySelector<HTMLCanvasElement>('#pad')!)
@@ -171,6 +178,7 @@ function sendDrawing() {
     seed,
     depth,
     yf: ty / H,
+    w: Math.round(rect.width),
     pts: strokes.map((s) => resample([s], 4).flatMap((p) => [Math.round(p.x), Math.round(p.y)])),
   }
   clouds.push({
@@ -182,7 +190,15 @@ function sendDrawing() {
   if (reduceMotion) clouds[clouds.length - 1].sprite = bake(puffs, dpr)
 
   if (shareBox.checked) void share(seed, strokes)
+  else if (!asked()) setTimeout(() => openAsk(seed, strokes), (reduceMotion ? 0.3 : MORPH) * 1000 + 300)
+  sr.textContent = '구름을 하늘로 보냈어요'
 
+  // 가장 중요한 1.5초: 종이를 살짝 어둡게 해 흰 구름이 또렷하게, 힌트는 변신이 끝난 뒤에
+  morphUntil = performance.now() + (reduceMotion ? 0 : MORPH * 1000)
+  paper.classList.add('morphing')
+  clearTimeout(morphTimer)
+  morphTimer = window.setTimeout(() => { paper.classList.remove('morphing'); hint.classList.toggle('off', pad.hasInk) }, reduceMotion ? 0 : MORPH * 1000)
+  cleared = null
   pad.clear()
   navigator.vibrate?.(12)
   book.classList.add('lift')
@@ -193,6 +209,40 @@ function sendDrawing() {
     users[0].phase = 'fade'
     users[0].t = 0
   }
+}
+
+let morphUntil = 0
+let morphTimer = 0
+
+// ---------- 공유 묻기 (첫 전송 뒤 한 번) ----------
+
+function asked() {
+  try { return localStorage.getItem(ASKED_KEY) === '1' } catch { return false }
+}
+function markAsked() {
+  try { localStorage.setItem(ASKED_KEY, '1') } catch { /* 무시 */ }
+  shareRow.hidden = false
+}
+function openAsk(seed: number, strokes: Stroke[]) {
+  if (asked() || !askBox.hidden) return
+  askNick.value = nickInput.value
+  askBox.hidden = false
+  const yes = askBox.querySelector<HTMLButtonElement>('#ask-yes')!
+  const no = askBox.querySelector<HTMLButtonElement>('#ask-no')!
+  const close = (ok: boolean) => {
+    askBox.hidden = true
+    yes.onclick = no.onclick = null
+    markAsked()
+    shareBox.checked = ok
+    if (ok) nickInput.value = askNick.value.trim()
+    syncShare()
+    if (ok) void share(seed, strokes)
+    else showToast('내 하늘에만 띄울게요. 아래에서 언제든 바꿀 수 있어요')
+    sendBtn.focus()
+  }
+  yes.onclick = () => close(true)
+  no.onclick = () => close(false)
+  yes.focus()
 }
 
 // ---------- 다른 사람 구름 ----------
@@ -309,7 +359,12 @@ function load() {
       for (let i = 0; i + 1 < flat.length; i += 2) s.push({ x: Number(flat[i]) || 0, y: Number(flat[i + 1]) || 0 })
       return s
     })
-    const puffs = puffsFromStrokes(strokes, d.seed)
+    // 다른 크기 화면(예: PC)에서 그린 구름이 폰 하늘을 덮지 않게 지금 종이 폭에 맞춰 줄인다
+    let maxX = 1
+    for (const s of strokes) for (const p of s) maxX = Math.max(maxX, p.x)
+    const padW = pad.canvas.getBoundingClientRect().width || W
+    const k = Math.min(1, padW / Math.max(Number(d.w) || 0, maxX))
+    const puffs = puffsFromStrokes(strokes, d.seed, 1.15 * k)
     if (puffs.length === 0) continue
     const depth = Math.min(1, Math.max(0.35, Number(d.depth) || 0.8))
     const y = H * Math.min(0.6, Math.max(0.05, Number(d.yf) || 0.3))
@@ -336,17 +391,22 @@ function drawSprite(g: CanvasRenderingContext2D, c: Cloud, scale: number) {
   g.globalAlpha = 1
 }
 
+/** 다른 사람 구름 아래 닉네임: 흰 구름·밝은 하늘 위에서도 읽히게 진한 알약 위에 */
 function drawNick(c: Cloud) {
   const s = c.sprite!
-  const y = c.y + (s.h - s.oy) * c.depth * 0.82
-  sg.globalAlpha = c.alpha * 0.9
-  sg.font = '600 12px -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif'
+  const y = c.y + (s.h - s.oy) * c.depth * 0.9
+  sg.globalAlpha = c.alpha
+  sg.font = '600 13px -apple-system, "Apple SD Gothic Neo", system-ui, sans-serif'
   sg.textAlign = 'center'
-  sg.textBaseline = 'top'
-  sg.fillStyle = 'rgba(30, 80, 140, 0.35)'
-  sg.fillText(c.nick!, c.x + 0.5, y + 1)
+  sg.textBaseline = 'middle'
+  const w = sg.measureText(c.nick!).width + 16
+  sg.fillStyle = 'rgba(22, 52, 92, 0.62)'
+  sg.beginPath()
+  if (sg.roundRect) sg.roundRect(c.x - w / 2, y, w, 22, 11)
+  else sg.rect(c.x - w / 2, y, w, 22) // iOS 15 이하 사파리에는 roundRect 가 없다
+  sg.fill()
   sg.fillStyle = '#ffffff'
-  sg.fillText(c.nick!, c.x, y)
+  sg.fillText(c.nick!, c.x, y + 11.5)
   sg.globalAlpha = 1
 }
 
@@ -463,16 +523,40 @@ function frame(now: number) {
 
 pad.onChange = (has) => {
   sendBtn.disabled = !has
-  hint.classList.toggle('off', has)
+  undoBtn.disabled = !has
+  if (performance.now() >= morphUntil) hint.classList.toggle('off', has)
+  if (has && cleared) endClearUndo()
 }
+undoBtn.addEventListener('click', () => pad.undo())
+
+// 지우기: 한 번에 다 지우되 4초 동안은 같은 버튼이 '되돌리기'가 된다
+let cleared: Stroke[] | null = null
+let clearTimer = 0
+function endClearUndo() {
+  cleared = null
+  clearTimeout(clearTimer)
+  clearBtn.textContent = '지우기'
+}
+clearBtn.addEventListener('click', () => {
+  if (cleared) { const s = cleared; endClearUndo(); pad.restore(s); sr.textContent = '지운 그림을 되돌렸어요'; return }
+  if (!pad.hasInk) return
+  const s = pad.getStrokes()
+  pad.clear()
+  cleared = s
+  clearBtn.textContent = '되돌리기'
+  sr.textContent = '다 지웠어요. 되돌리기를 누르면 돌아와요'
+  clearTimer = window.setTimeout(endClearUndo, 4000)
+})
 sendBtn.addEventListener('click', sendDrawing)
 try {
   nickInput.value = localStorage.getItem(NICK_KEY) ?? ''
-  shareBox.checked = localStorage.getItem(SHARE_KEY) !== '0'
+  // 공유는 기본으로 꺼 두고, 첫 전송 뒤 한 번 물어본다(2026-11-09 결정)
+  shareBox.checked = localStorage.getItem(SHARE_KEY) === '1'
+  shareRow.hidden = !asked() && !shareBox.checked
 } catch {
   /* 저장소를 못 쓰면 기본값 */
 }
-const syncShare = () => {
+function syncShare() {
   nickInput.hidden = !shareBox.checked
   try {
     localStorage.setItem(SHARE_KEY, shareBox.checked ? '1' : '0')
@@ -484,7 +568,6 @@ const syncShare = () => {
 shareBox.addEventListener('change', syncShare)
 nickInput.addEventListener('change', syncShare)
 nickInput.hidden = !shareBox.checked
-clearBtn.addEventListener('click', () => pad.clear())
 
 let resizeTimer = 0
 window.addEventListener('resize', () => {
