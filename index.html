@@ -5,43 +5,119 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" href="/fonts/gaegu-core.woff2" as="font" type="font/woff2" crossorigin />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="하늘 스케치북" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#4a9be8" />
     <meta name="description" content="스케치북에 그린 그림이 뭉게구름이 되어 하늘로 떠올라요." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="하늘 스케치북" />
+    <meta property="og:title" content="하늘 스케치북" />
+    <meta property="og:description" content="스케치북에 그린 그림이 뭉게구름이 되어 하늘로 떠올라요." />
+    <meta property="og:url" content="https://sky-doodle.pages.dev/" />
+    <meta property="og:image" content="https://sky-doodle.pages.dev/og.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="파란 하늘에 하트 모양 뭉게구름이 떠 있다" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://sky-doodle.pages.dev/og.jpg" />
+    <link rel="canonical" href="https://sky-doodle.pages.dev/" />
     <title>하늘 스케치북</title>
   </head>
   <body>
-    <canvas id="sky" aria-label="구름이 떠다니는 하늘"></canvas>
+    <canvas id="bg" aria-hidden="true"></canvas>
+    <canvas id="sky" role="application" aria-label="구름이 떠다니는 하늘. 내 구름을 누르면 저장하거나 보낼 수 있어요"></canvas>
 
-    <section class="book" aria-label="스케치북">
+    <svg width="0" height="0" class="defs" aria-hidden="true">
+      <symbol id="i-pencil" viewBox="0 0 20 60" preserveAspectRatio="none">
+        <path d="M10 1 16 17H4z" fill="#ecd3a4" />
+        <path d="M10 1l2.6 7H7.4z" fill="#3b4755" />
+        <rect x="4" y="17" width="12" height="43" fill="#566577" />
+        <rect x="8" y="17" width="4" height="43" fill="#6b7a8c" />
+      </symbol>
+      <symbol id="i-eraser" viewBox="0 0 30 60" preserveAspectRatio="none">
+        <rect x="3" y="4" width="24" height="56" rx="4" fill="#f6efe2" />
+        <rect x="3" y="24" width="24" height="36" fill="#c94a1a" />
+        <rect x="3" y="24" width="24" height="3" fill="#9c3912" />
+      </symbol>
+    </svg>
+
+    <main class="book" aria-label="스케치북">
       <div class="rings" aria-hidden="true"></div>
-      <div class="paper">
-        <canvas id="pad" aria-label="여기에 그림을 그려요"></canvas>
-        <p class="hint" id="hint">여기에 그려 보세요</p>
-      </div>
-      <div class="tools">
-        <button type="button" id="undo" class="ghost icon" aria-label="한 획 되돌리기" disabled>
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <button type="button" id="clear" class="ghost">지우기</button>
-        <div class="share" id="sharebox" hidden>
-          <label class="check"><input type="checkbox" id="share" /> 다른 사람 하늘에도 띄우기 <span class="sub">(검수 후)</span></label>
-          <input type="text" id="nick" maxlength="10" placeholder="닉네임(공개돼요)" autocomplete="nickname" aria-label="구름 아래에 공개로 보일 닉네임, 10자 이내, 선택" />
+      <div class="board">
+        <header class="cover">
+          <h1>하늘 스케치북</h1>
+          <span class="grow"></span>
+          <button type="button" id="undo" class="plain icon" aria-label="한 번 되돌리기" disabled>
+            <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true"><path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" id="clear" class="plain">새 종이</button>
+          <button type="button" id="help" class="help" aria-expanded="false" aria-controls="about" aria-label="하늘 스케치북 안내">?</button>
+        </header>
+        <div class="paper">
+          <canvas id="pad" role="img" aria-label="여기에 그림을 그려요"></canvas>
+          <p class="hint" id="hint">
+            <span class="words" id="hint-words">아무거나 그려 보세요</span>
+            <svg class="doodle" viewBox="0 0 220 90" width="220" height="90" aria-hidden="true">
+              <path d="M38 62c-14 0-20-9-18-18 2-10 12-14 21-11 3-13 17-21 31-17 9 2 15 8 18 15 9-6 22-4 27 5 12-3 24 4 24 14 0 8-7 13-16 13z" />
+              <path d="M172 70c8 2 15-1 20-7M178 79c6 1 11-1 15-5" />
+            </svg>
+          </p>
+          <div class="sheet" id="sheet" hidden><canvas id="sheet-ink"></canvas></div>
+          <button type="button" id="corner" class="corner" aria-label="넘긴 종이 되돌리기" hidden></button>
+          <section class="about" id="about" aria-labelledby="about-h" hidden>
+            <h2 id="about-h">그리면 구름이 돼요</h2>
+            <ul>
+              <li>종이에 그리고 <b>하늘로 보내기</b>를 누르면 그 모양 그대로 구름이 떠올라요.</li>
+              <li>내 구름은 이 기기에만 남아요. 하늘에서 누르면 그림으로 저장하거나 내릴 수 있어요.</li>
+              <li>다른 사람 하늘에 띄우면, 확인을 거친 뒤 적어 둔 이름과 함께 보여요.</li>
+            </ul>
+            <p class="about-foot">
+              <a href="https://velog.io/@haul/sky-doodle-drawing-becomes-cloud" target="_blank" rel="noopener">만든 이야기</a>
+              <button type="button" id="about-close" class="plain">닫기</button>
+            </p>
+          </section>
+          <p id="toast" class="tape" role="status" aria-live="polite"></p>
         </div>
-        <button type="button" id="send" class="primary" disabled>하늘로 보내기</button>
+        <div class="tray">
+          <div class="pencils" id="tools" role="radiogroup" aria-label="그리는 도구">
+            <button type="button" role="radio" class="tool thin" data-w="3" aria-checked="false" aria-label="가는 연필"><svg aria-hidden="true"><use href="#i-pencil" /></svg></button>
+            <button type="button" role="radio" class="tool mid" data-w="5" aria-checked="true" aria-label="보통 연필"><svg aria-hidden="true"><use href="#i-pencil" /></svg></button>
+            <button type="button" role="radio" class="tool thick" data-w="9" aria-checked="false" aria-label="굵은 연필"><svg aria-hidden="true"><use href="#i-pencil" /></svg></button>
+            <button type="button" role="radio" class="tool rubber" data-eraser aria-checked="false" aria-label="지우개. 문지른 획을 지워요"><svg aria-hidden="true"><use href="#i-eraser" /></svg></button>
+          </div>
+          <button type="button" id="send" class="stamp" disabled>하늘로 보내기</button>
+        </div>
+        <div class="share" id="sharebox" hidden>
+          <label class="check"><input type="checkbox" id="share" /> 다른 사람 하늘에도 띄우기</label>
+          <button type="button" id="nametag" class="tag" aria-label="구름에 달 이름 바꾸기">이름표</button>
+        </div>
       </div>
-      <div class="ask" id="ask" role="dialog" aria-labelledby="ask-q" hidden>
-        <p id="ask-q">이 구름, 다른 사람 하늘에도 띄울까요?</p>
-        <p class="sub">검수를 거친 뒤 다른 방문자 하늘에 떠요. 닉네임을 쓰면 구름 아래 보여요.</p>
-        <input type="text" id="ask-nick" maxlength="10" placeholder="닉네임(선택)" autocomplete="nickname" aria-label="구름 아래에 공개로 보일 닉네임, 10자 이내, 선택" />
-        <div class="row"><button type="button" id="ask-no" class="ghost">괜찮아요</button><button type="button" id="ask-yes" class="primary">띄우기</button></div>
-      </div>
-    </section>
+    </main>
 
     <canvas id="fx" aria-hidden="true"></canvas>
-    <p id="toast" class="toast" role="status" aria-live="polite"></p>
+
+    <form class="note" id="ask" aria-labelledby="ask-q" hidden>
+      <p id="ask-q">이 구름, 다른 사람 하늘에도 띄울까요?</p>
+      <p class="sub" id="ask-sub">확인을 거친 뒤에 떠요.</p>
+      <div class="field" id="ask-field" hidden>
+        <label for="ask-nick">구름에 달 이름 <span class="sub">(안 써도 돼요)</span></label>
+        <input type="text" id="ask-nick" maxlength="10" autocomplete="nickname" enterkeyhint="done" />
+      </div>
+      <div class="row">
+        <button type="submit" id="ask-yes" class="stamp small">띄우기</button>
+        <button type="button" id="ask-no" class="plain">괜찮아요</button>
+      </div>
+    </form>
+
+    <div class="slip" id="slip" role="group" aria-label="고른 내 구름" hidden>
+      <button type="button" id="slip-save" class="plain">저장</button>
+      <button type="button" id="slip-share" class="plain">보내기</button>
+      <button type="button" id="slip-drop" class="plain">내리기</button>
+    </div>
+
     <p id="sr" class="sr-only" aria-live="polite"></p>
 
     <script type="module" src="/src/main.ts"></script>

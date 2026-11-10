@@ -13,18 +13,20 @@
       <dl class="stats" id="stats" aria-live="polite"></dl>
     </header>
     <nav class="tabs" role="tablist" aria-label="상태">
-      <button type="button" role="tab" data-status="pending" aria-selected="true">대기</button>
-      <button type="button" role="tab" data-status="approved" aria-selected="false">승인됨</button>
-      <button type="button" role="tab" data-status="rejected" aria-selected="false">거절됨</button>
-      <button type="button" role="tab" data-status="hidden" aria-selected="false">내림</button>
+      <button type="button" role="tab" id="tab-pending" aria-controls="grid" data-status="pending" aria-selected="true">대기</button>
+      <button type="button" role="tab" id="tab-approved" aria-controls="grid" data-status="approved" aria-selected="false">승인됨</button>
+      <button type="button" role="tab" id="tab-rejected" aria-controls="grid" data-status="rejected" aria-selected="false">거절됨</button>
+      <button type="button" role="tab" id="tab-hidden" aria-controls="grid" data-status="hidden" aria-selected="false">내림</button>
     </nav>
     <div class="bulk">
       <label><input type="checkbox" id="all" /> 전체 선택</label>
       <span id="picked">0개 선택</span>
+      <span class="keys">J·K 이동, A 승인, R 거절·내리기</span>
       <span class="grow"></span>
       <span id="bulk-actions"></span>
     </div>
-    <main id="grid" class="grid"></main>
+    <p id="notice" class="notice" role="alert" hidden></p>
+    <main id="grid" class="grid" role="tabpanel" aria-labelledby="tab-pending"></main>
     <p id="empty" class="empty" hidden>여기는 비어 있어요.</p>
     <button type="button" id="more" class="more" hidden>더 보기</button>
     <script type="module" src="/src/admin.ts"></script>
